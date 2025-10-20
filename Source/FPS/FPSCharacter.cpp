@@ -47,6 +47,7 @@ AFPSCharacter::AFPSCharacter()
 void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	DebugFunc();
 	KoyoteJump(DeltaTime);
 	FallingGravity(DeltaTime);
 	CheckForWall(DeltaTime);
@@ -150,6 +151,15 @@ void AFPSCharacter::Jump()
 	}
 }
 
+void AFPSCharacter::DebugFunc()
+{
+	float DebugDistance = 500.f; // How far the line goes
+	FVector Start = GetActorLocation();
+	FVector End = Start + (GetActorForwardVector() * DebugDistance);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.f, 0, 1.0f);
+}
+
 void AFPSCharacter::FallingGravity(float DeltaTime)
 {
 	bool bIsFalling = GetCharacterMovement()->IsFalling();
@@ -217,11 +227,16 @@ void AFPSCharacter::CheckForWall(float DeltaTime)
 	DrawDebugLine(GetWorld(), Start, EndRight, FColor::Blue, false, 0.f, 0, 1.0f);
 	DrawDebugLine(GetWorld(), Start, EndLeft, FColor::Red, false, 0.f, 0, 1.0f);
 
-	if (bHitRight || bHitLeft)
+	auto IsValidWall = [](AActor* HitActor)
+		{
+			return HitActor && HitActor->ActorHasTag(FName("WallRun"));
+		};
+
+	if ((bHitRight && IsValidWall(RightHit.GetActor())) || (bHitLeft && IsValidWall(LeftHit.GetActor())))
 	{
 		if (!GetCharacterMovement()->IsMovingOnGround())
 		{
-			CurrentWallNormal = bHitRight ? RightHit.ImpactNormal : LeftHit.ImpactNormal;
+			CurrentWallNormal = (bHitRight && IsValidWall(RightHit.GetActor())) ? RightHit.ImpactNormal : LeftHit.ImpactNormal;
 			StartWallRun(CurrentWallNormal);
 		}
 	}

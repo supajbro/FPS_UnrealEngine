@@ -93,6 +93,8 @@ public:
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 private:
+	void DebugFunc();
+
 	// Handles additional gravity when player is falling
 	void FallingGravity(float DeltaTime);
 
