@@ -47,6 +47,7 @@ AFPSCharacter::AFPSCharacter()
 void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	KoyoteJump(DeltaTime);
 	FallingGravity(DeltaTime);
 }
 
@@ -72,6 +73,36 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
+void AFPSCharacter::Jump()
+{
+	UCharacterMovementComponent* Character = GetCharacterMovement();
+
+	bool bCanKoyoteJump = !Character->IsMovingOnGround() && TimeSinceLeftGround <= KoyoteTime;
+	bool bCanNormalJump = Character->IsMovingOnGround();
+
+	if (bCanNormalJump)
+	{
+		Super::Jump();
+		UE_LOG(LogTemp, Warning, TEXT("Normal Jump"));
+		return;
+	}
+
+	if (bCanKoyoteJump)
+	{
+		LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
+		UE_LOG(LogTemp, Warning, TEXT("Koyote Jump"));
+	}
+
+	//// Double jump
+	//if (bDoubleJump && !bHasDoubleJumped && MoveComp->IsFalling())
+	//{
+	//	// Reset velocity to make the jump feel more powerful
+	//	LaunchCharacter(FVector(0, 0, MoveComp->JumpZVelocity), false, true);
+	//	bHasDoubleJumped = true;
+	//	UE_LOG(LogTemp, Warning, TEXT("Double jump started"));
+	//}
+}
+
 void AFPSCharacter::FallingGravity(float DeltaTime)
 {
 	bool bIsFalling = GetCharacterMovement()->IsFalling();
@@ -86,6 +117,17 @@ void AFPSCharacter::FallingGravity(float DeltaTime)
 	FVector tempVel = GetCharacterMovement()->Velocity;
 	tempVel.Z -= FallGravityMultiplier * DeltaTime;
 	GetCharacterMovement()->Velocity = tempVel;
+}
+
+void AFPSCharacter::KoyoteJump(float DeltaTime)
+{
+	bool bIsGrounded = GetCharacterMovement()->IsMovingOnGround();
+	if (bIsGrounded) {
+		TimeSinceLeftGround = 0.f;
+	}
+	else {
+		TimeSinceLeftGround += DeltaTime;
+	}
 }
 
 

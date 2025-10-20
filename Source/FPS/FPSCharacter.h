@@ -82,6 +82,7 @@ protected:
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	
+	virtual void Jump() override;
 
 public:
 
@@ -92,7 +93,6 @@ public:
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 private:
-
 	// Handles additional gravity when player is falling
 	void FallingGravity(float DeltaTime);
 	float FallGravityMultiplier;
@@ -103,5 +103,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Falling")
 	float FallGravityMultiplierMax = 100.f;
 
+	// Koyote Time
+	void KoyoteJump(float DeltaTime);
+
+	UPROPERTY(VisibleAnywhere, Category = "Jumping")
+	float TimeSinceLeftGround = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Jumping")
+	float KoyoteTime = .2f;
 };
 
