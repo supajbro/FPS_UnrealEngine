@@ -118,13 +118,18 @@ private:
 
 	// Double Jump
 	bool bHasDoubleJumped = false;
+	FVector PreviousDirection = FVector::ZeroVector;
 
 protected:
-	void CheckForWall();
+	void CheckForWall(float DeltaTime);
 	void StartWallRun(const FVector& WallNormal);
 	void StopWallRun();
 
 	bool bIsWallRunning = false;
+	FVector CurrentWallNormal = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere, Category = "Wall Run")
+	float WallConnectTimer = 0.f;
 
 	UPROPERTY(EditAnywhere, Category = "Wall Run")
 	float WallCheckDistance = 100.f;

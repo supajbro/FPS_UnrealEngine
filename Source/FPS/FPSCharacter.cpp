@@ -49,7 +49,7 @@ void AFPSCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	KoyoteJump(DeltaTime);
 	FallingGravity(DeltaTime);
-	CheckForWall();
+	CheckForWall(DeltaTime);
 }
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -85,13 +85,22 @@ void AFPSCharacter::Jump()
 		Forward.Z = 0.0f;
 		Forward.Normalize();
 
+		// Make sure the jump is not into the wall
+		float Dot = FVector::DotProduct(Forward, CurrentWallNormal);
+		//UE_LOG(LogTemp, Warning, TEXT("Wall Run Dot: %f"), Dot);
+		if (Dot < 0.f)
+		{
+			Forward = FVector::VectorPlaneProject(Forward, CurrentWallNormal * 15.f).GetSafeNormal();
+		}
+
 		FVector JumpVelocity = Forward * WallRunSpeed;
 		JumpVelocity.Z = Character->JumpZVelocity;
 
 		LaunchCharacter(JumpVelocity, true, true);
+		PreviousDirection = GetActorForwardVector();
 		bHasDoubleJumped = false;
 		StopWallRun();
-		UE_LOG(LogTemp, Warning, TEXT("Wall Run Jump"));
+		//UE_LOG(LogTemp, Warning, TEXT("Wall Run Jump"));
 		return;
 	}
 
@@ -101,16 +110,18 @@ void AFPSCharacter::Jump()
 	if (bCanNormalJump)
 	{
 		Super::Jump();
+		PreviousDirection = GetActorForwardVector();
 		bHasDoubleJumped = false;
-		UE_LOG(LogTemp, Warning, TEXT("Normal Jump"));
+		//UE_LOG(LogTemp, Warning, TEXT("Normal Jump"));
 		return;
 	}
 
 	if (bCanKoyoteJump)
 	{
 		LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
+		PreviousDirection = GetActorForwardVector();
 		bHasDoubleJumped = false;
-		UE_LOG(LogTemp, Warning, TEXT("Koyote Jump"));
+		//UE_LOG(LogTemp, Warning, TEXT("Koyote Jump"));
 		return;
 	}
 
@@ -121,10 +132,21 @@ void AFPSCharacter::Jump()
 		Forward.Z = 0.0f;
 		Forward.Normalize();
 
-		// Reset velocity to make the jump feel more powerful
-		LaunchCharacter(FVector(Forward.X, Forward.Y, Character->JumpZVelocity), true, true);
+		float Dot = FVector::DotProduct(GetActorForwardVector(), PreviousDirection);
+		UE_LOG(LogTemp, Warning, TEXT("Angle Dot: %f"), Dot);
+		if (Dot < 0.f)
+		{
+			// Reset velocity to make the jump feel more powerful
+			LaunchCharacter(FVector(Forward.X, Forward.Y, Character->JumpZVelocity), true, true);
+		}
+		else
+		{
+			// Do a regular jump
+			LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
+		}
+
 		bHasDoubleJumped = true;
-		UE_LOG(LogTemp, Warning, TEXT("Double jump"));
+		//UE_LOG(LogTemp, Warning, TEXT("Double jump"));
 	}
 }
 
@@ -155,8 +177,15 @@ void AFPSCharacter::KoyoteJump(float DeltaTime)
 	}
 }
 
-void AFPSCharacter::CheckForWall()
+void AFPSCharacter::CheckForWall(float DeltaTime)
 {
+	WallConnectTimer += DeltaTime;
+
+	if (WallConnectTimer < .1f)
+	{
+		return;
+	}
+
 	FVector Start = GetActorLocation();
 	FVector RightVector = GetActorRightVector();
 	FVector EndRight = Start + (RightVector * WallCheckDistance);
@@ -192,12 +221,14 @@ void AFPSCharacter::CheckForWall()
 	{
 		if (!GetCharacterMovement()->IsMovingOnGround())
 		{
-			StartWallRun((bHitRight) ? RightHit.ImpactNormal : LeftHit.ImpactNormal);
+			CurrentWallNormal = bHitRight ? RightHit.ImpactNormal : LeftHit.ImpactNormal;
+			StartWallRun(CurrentWallNormal);
 		}
 	}
 	else
 	{
 		StopWallRun();
+		CurrentWallNormal = FVector::ZeroVector;
 	}
 
 	// Disable players from falling when wall running
@@ -225,7 +256,7 @@ void AFPSCharacter::StartWallRun(const FVector& WallNormal)
 	bUseControllerRotationYaw = false;
 	Movement->bOrientRotationToMovement = false;
 
-	UE_LOG(LogTemp, Warning, TEXT("Wall run started"));
+	//UE_LOG(LogTemp, Warning, TEXT("Wall run started"));
 }
 
 void AFPSCharacter::StopWallRun()
@@ -236,13 +267,15 @@ void AFPSCharacter::StopWallRun()
 	}
 	bIsWallRunning = false;
 
+	WallConnectTimer = 0.f;
+
 	GetCharacterMovement()->GravityScale = 1.f;
 
 	// Unlock rotation so player will move with camera
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("Wall run stopped"));
+	//UE_LOG(LogTemp, Warning, TEXT("Wall run stopped"));
 }
 
 
