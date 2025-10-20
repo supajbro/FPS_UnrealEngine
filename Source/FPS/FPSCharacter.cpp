@@ -49,6 +49,7 @@ void AFPSCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	KoyoteJump(DeltaTime);
 	FallingGravity(DeltaTime);
+	CheckForWall();
 }
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -76,6 +77,23 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void AFPSCharacter::Jump()
 {
 	UCharacterMovementComponent* Character = GetCharacterMovement();
+
+	// Jump off of Wall Run
+	if (bIsWallRunning)
+	{
+		FVector Forward = FirstPersonCameraComponent->GetForwardVector();
+		Forward.Z = 0.0f;
+		Forward.Normalize();
+
+		FVector JumpVelocity = Forward * WallRunSpeed;
+		JumpVelocity.Z = Character->JumpZVelocity;
+
+		LaunchCharacter(JumpVelocity, true, true);
+		bHasDoubleJumped = false;
+		StopWallRun();
+		UE_LOG(LogTemp, Warning, TEXT("Wall Run Jump"));
+		return;
+	}
 
 	bool bCanKoyoteJump = !Character->IsMovingOnGround() && TimeSinceLeftGround <= KoyoteTime;
 	bool bCanNormalJump = Character->IsMovingOnGround();
@@ -131,6 +149,96 @@ void AFPSCharacter::KoyoteJump(float DeltaTime)
 	else {
 		TimeSinceLeftGround += DeltaTime;
 	}
+}
+
+void AFPSCharacter::CheckForWall()
+{
+	FVector Start = GetActorLocation();
+	FVector RightVector = GetActorRightVector();
+	FVector EndRight = Start + (RightVector * WallCheckDistance);
+	FVector EndLeft = Start - (RightVector * WallCheckDistance);
+
+	FHitResult RightHit;
+	FHitResult LeftHit;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHitRight = GetWorld()->LineTraceSingleByChannel(
+		RightHit,
+		Start,
+		EndRight,
+		ECC_Visibility,
+		Params
+	);
+
+	bool bHitLeft = GetWorld()->LineTraceSingleByChannel(
+		LeftHit,
+		Start,
+		EndLeft,
+		ECC_Visibility,
+		Params
+	);
+	
+	// Debug lines
+	DrawDebugLine(GetWorld(), Start, EndRight, FColor::Blue, false, 0.f, 0, 1.0f);
+	DrawDebugLine(GetWorld(), Start, EndLeft, FColor::Red, false, 0.f, 0, 1.0f);
+
+	if (bHitRight || bHitLeft)
+	{
+		if (!GetCharacterMovement()->IsMovingOnGround())
+		{
+			StartWallRun((bHitRight) ? RightHit.ImpactNormal : LeftHit.ImpactNormal);
+		}
+	}
+	else
+	{
+		StopWallRun();
+	}
+
+	// Disable players from falling when wall running
+	if (bIsWallRunning)
+	{
+		FVector Velocity = GetCharacterMovement()->Velocity;
+		Velocity.Z = 0.0f;
+		GetCharacterMovement()->Velocity = Velocity;
+	}
+}
+
+void AFPSCharacter::StartWallRun(const FVector& WallNormal)
+{
+	if (bIsWallRunning)
+	{
+		return;
+	}
+	bIsWallRunning = true;
+
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	Movement->GravityScale = WallRunGravityScale;
+	Movement->Velocity = FVector::VectorPlaneProject(Movement->Velocity, WallNormal).GetSafeNormal() * WallRunSpeed;
+
+	// Lock rotation so player WONT move with rotation while wall running
+	bUseControllerRotationYaw = false;
+	Movement->bOrientRotationToMovement = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("Wall run started"));
+}
+
+void AFPSCharacter::StopWallRun()
+{
+	if (!bIsWallRunning)
+	{
+		return;
+	}
+	bIsWallRunning = false;
+
+	GetCharacterMovement()->GravityScale = 1.f;
+
+	// Unlock rotation so player will move with camera
+	bUseControllerRotationYaw = true;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("Wall run stopped"));
 }
 
 

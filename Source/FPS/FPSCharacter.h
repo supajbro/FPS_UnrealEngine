@@ -118,5 +118,21 @@ private:
 
 	// Double Jump
 	bool bHasDoubleJumped = false;
+
+protected:
+	void CheckForWall();
+	void StartWallRun(const FVector& WallNormal);
+	void StopWallRun();
+
+	bool bIsWallRunning = false;
+
+	UPROPERTY(EditAnywhere, Category = "Wall Run")
+	float WallCheckDistance = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "Wall Run")
+	float WallRunGravityScale = .2f;
+
+	UPROPERTY(EditAnywhere, Category = "Wall Run")
+	float WallRunSpeed = 600.f;
 };
 
