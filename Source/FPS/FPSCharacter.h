@@ -77,6 +77,7 @@ protected:
 	virtual void DoJumpEnd();
 
 protected:
+	virtual void Tick(float DeltaTime) override;
 
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -89,6 +90,18 @@ public:
 
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+private:
+
+	// Handles additional gravity when player is falling
+	void FallingGravity(float DeltaTime);
+	float FallGravityMultiplier;
+	UPROPERTY(EditAnywhere, Category = "Falling")
+	float FallGravityScaler = 5.f;
+	UPROPERTY(EditAnywhere, Category = "Falling")
+	float FallGravityMultiplierMin = 10.f;
+	UPROPERTY(EditAnywhere, Category = "Falling")
+	float FallGravityMultiplierMax = 100.f;
 
 };
 

@@ -44,6 +44,12 @@ AFPSCharacter::AFPSCharacter()
 	GetCharacterMovement()->AirControl = 0.5f;
 }
 
+void AFPSCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	FallingGravity(DeltaTime);
+}
+
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
 	// Set up action bindings
@@ -64,6 +70,22 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	{
 		UE_LOG(LogFPS, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+}
+
+void AFPSCharacter::FallingGravity(float DeltaTime)
+{
+	bool bIsFalling = GetCharacterMovement()->IsFalling();
+
+	if (!bIsFalling)
+	{
+		FallGravityMultiplier = FallGravityMultiplierMin;
+		return;
+	}
+
+	FallGravityMultiplier = (FallGravityMultiplier < FallGravityMultiplierMax) ? FallGravityMultiplier + DeltaTime * FallGravityScaler : FallGravityMultiplierMax;
+	FVector tempVel = GetCharacterMovement()->Velocity;
+	tempVel.Z -= FallGravityMultiplier * DeltaTime;
+	GetCharacterMovement()->Velocity = tempVel;
 }
 
 
