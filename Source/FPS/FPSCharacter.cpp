@@ -83,6 +83,7 @@ void AFPSCharacter::Jump()
 	if (bCanNormalJump)
 	{
 		Super::Jump();
+		bHasDoubleJumped = false;
 		UE_LOG(LogTemp, Warning, TEXT("Normal Jump"));
 		return;
 	}
@@ -90,17 +91,19 @@ void AFPSCharacter::Jump()
 	if (bCanKoyoteJump)
 	{
 		LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
+		bHasDoubleJumped = false;
 		UE_LOG(LogTemp, Warning, TEXT("Koyote Jump"));
+		return;
 	}
 
-	//// Double jump
-	//if (bDoubleJump && !bHasDoubleJumped && MoveComp->IsFalling())
-	//{
-	//	// Reset velocity to make the jump feel more powerful
-	//	LaunchCharacter(FVector(0, 0, MoveComp->JumpZVelocity), false, true);
-	//	bHasDoubleJumped = true;
-	//	UE_LOG(LogTemp, Warning, TEXT("Double jump started"));
-	//}
+	// Double jump
+	if (!bHasDoubleJumped && Character->IsFalling())
+	{
+		// Reset velocity to make the jump feel more powerful
+		LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
+		bHasDoubleJumped = true;
+		UE_LOG(LogTemp, Warning, TEXT("Double jump"));
+	}
 }
 
 void AFPSCharacter::FallingGravity(float DeltaTime)

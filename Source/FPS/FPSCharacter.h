@@ -95,11 +95,15 @@ public:
 private:
 	// Handles additional gravity when player is falling
 	void FallingGravity(float DeltaTime);
+
 	float FallGravityMultiplier;
+
 	UPROPERTY(EditAnywhere, Category = "Falling")
 	float FallGravityScaler = 5.f;
+
 	UPROPERTY(EditAnywhere, Category = "Falling")
 	float FallGravityMultiplierMin = 10.f;
+
 	UPROPERTY(EditAnywhere, Category = "Falling")
 	float FallGravityMultiplierMax = 100.f;
 
@@ -111,5 +115,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Jumping")
 	float KoyoteTime = .2f;
+
+	// Double Jump
+	bool bHasDoubleJumped = false;
 };
 
