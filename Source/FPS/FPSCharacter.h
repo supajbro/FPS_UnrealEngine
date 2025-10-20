@@ -126,6 +126,9 @@ private:
 	bool bHasDoubleJumped = false;
 	FVector PreviousDirection = FVector::ZeroVector;
 
+	UPROPERTY(EditAnywhere, Category = "Double Jump")
+	float DoubleJumpForwardBoost = 600.f;
+
 protected:
 	void CheckForWall(float DeltaTime);
 	void StartWallRun(const FVector& WallNormal);
@@ -156,5 +159,7 @@ protected:
 	float DashUpwardBoost = 300.f;
 
 	FVector DashDirection;
+
+	bool bHasDashed = false;
 };
 

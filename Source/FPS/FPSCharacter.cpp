@@ -47,6 +47,14 @@ AFPSCharacter::AFPSCharacter()
 void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// When on ground check to make sure bools have been reset
+	if (GetCharacterMovement()->IsMovingOnGround())
+	{
+		bHasDoubleJumped = false;
+		bHasDashed = false;
+	}
+
 	DebugFunc();
 	KoyoteJump(DeltaTime);
 	FallingGravity(DeltaTime);
@@ -136,21 +144,10 @@ void AFPSCharacter::Jump()
 		Forward.Z = 0.0f;
 		Forward.Normalize();
 
-		float Dot = FVector::DotProduct(GetActorForwardVector(), PreviousDirection);
-		//UE_LOG(LogTemp, Warning, TEXT("Angle Dot: %f"), Dot);
-		if (Dot < 0.f)
-		{
-			// Reset velocity to make the jump feel more powerful
-			LaunchCharacter(FVector(Forward.X, Forward.Y, Character->JumpZVelocity), true, true);
-		}
-		else
-		{
-			// Do a regular jump
-			LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
-		}
+		FVector JumpVelocity = Forward * DoubleJumpForwardBoost + FVector(0, 0, Character->JumpZVelocity);
+		LaunchCharacter(JumpVelocity, true, true);
 
 		bHasDoubleJumped = true;
-		//UE_LOG(LogTemp, Warning, TEXT("Double jump"));
 	}
 }
 
@@ -265,6 +262,7 @@ void AFPSCharacter::StartWallRun(const FVector& WallNormal)
 		return;
 	}
 	bIsWallRunning = true;
+	bHasDashed = false;
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
 	Movement->GravityScale = WallRunGravityScale;
@@ -298,10 +296,12 @@ void AFPSCharacter::StopWallRun()
 
 void AFPSCharacter::StartDash()
 {
-	if (!GetCharacterMovement()->IsFalling() || bIsWallRunning)
+	if (bHasDashed || !GetCharacterMovement()->IsFalling() || bIsWallRunning)
 	{
 		return;
 	}
+
+	bHasDashed = true;
 
 	FVector Forward = GetCharacterMovement()->GetForwardVector();
 	Forward.Normalize();
