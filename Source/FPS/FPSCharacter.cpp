@@ -117,8 +117,12 @@ void AFPSCharacter::Jump()
 	// Double jump
 	if (!bHasDoubleJumped && Character->IsFalling())
 	{
+		FVector Forward = FirstPersonCameraComponent->GetForwardVector();
+		Forward.Z = 0.0f;
+		Forward.Normalize();
+
 		// Reset velocity to make the jump feel more powerful
-		LaunchCharacter(FVector(0, 0, Character->JumpZVelocity), false, true);
+		LaunchCharacter(FVector(Forward.X, Forward.Y, Character->JumpZVelocity), true, true);
 		bHasDoubleJumped = true;
 		UE_LOG(LogTemp, Warning, TEXT("Double jump"));
 	}
