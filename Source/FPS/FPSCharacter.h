@@ -52,6 +52,10 @@ protected:
 	/** Dash Input Action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* DashAction;
+
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* InteractAction;
 	
 public:
 	AFPSCharacter();
@@ -161,5 +165,26 @@ protected:
 	FVector DashDirection;
 
 	bool bHasDashed = false;
+
+protected:
+	void CheckForInteraction(float DeltaTime);
+	void InteractInput();
+
+	bool bCanInteract = false;
+
+	UPROPERTY(EditAnywhere, Category = "Interact")
+	float InteractCheckDistance = 100.f;
+
+	UPROPERTY()
+	AActor* InteractableActor;
+
+	void ShootPlayer(float DeltaTime);
+	bool bStartedShoot = false;
+	float ShootPower;
+	float ShootDuration;
+	FVector ShootDirection;
+
+public:
+	void StartShoot(float Power, float Duration, FVector Direction);
 };
 

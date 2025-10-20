@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Cannon.h"
 #include "FPS.h"
 
 AFPSCharacter::AFPSCharacter()
@@ -59,6 +60,7 @@ void AFPSCharacter::Tick(float DeltaTime)
 	KoyoteJump(DeltaTime);
 	FallingGravity(DeltaTime);
 	CheckForWall(DeltaTime);
+	CheckForInteraction(DeltaTime);
 }
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -79,6 +81,9 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		// Dash
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AFPSCharacter::StartDash);
+
+		// Interact
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AFPSCharacter::InteractInput);
 	}
 	else
 	{
@@ -157,7 +162,7 @@ void AFPSCharacter::DebugFunc()
 	FVector Start = GetActorLocation();
 	FVector End = Start + (GetActorForwardVector() * DebugDistance);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.f, 0, 1.0f);
+	DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, false, 0.f, 0, 1.0f);
 }
 
 void AFPSCharacter::FallingGravity(float DeltaTime)
@@ -312,6 +317,87 @@ void AFPSCharacter::StartDash()
 	LaunchCharacter(DashVelocity, true, true);
 
 	UE_LOG(LogTemp, Warning, TEXT("Dash Happened!"));
+}
+
+void AFPSCharacter::CheckForInteraction(float DeltaTime)
+{
+	FVector Start = GetActorLocation();
+	FVector Forward = GetActorForwardVector();
+	FVector EndForward = Start + (Forward * InteractCheckDistance);
+
+	FHitResult Hit;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		EndForward,
+		ECC_Visibility,
+		Params
+	);
+
+	auto IsValidWall = [](AActor* HitActor)
+		{
+			return HitActor && HitActor->ActorHasTag(FName("Cannon"));
+		};
+
+	if ((bHit && IsValidWall(Hit.GetActor())))
+	{
+		bCanInteract = true;
+		InteractableActor = Hit.GetActor();
+		DrawDebugLine(GetWorld(), Start, EndForward, FColor::Green, false, 0.f, 0, 1.0f);
+	}
+	else
+	{
+		bCanInteract = false;
+		InteractableActor = nullptr;
+		DrawDebugLine(GetWorld(), Start, EndForward, FColor::Red, false, 0.f, 0, 1.0f);
+	}
+}
+
+void AFPSCharacter::InteractInput()
+{
+	if (!bCanInteract)
+	{
+		return;
+	}
+
+	// Call the ShootPlayer function from Cannon.CPP
+	ACannon* Cannon = Cast<ACannon>(InteractableActor);
+	if (Cannon)
+	{
+		Cannon->ShootPlayer(this);
+		UE_LOG(LogTemp, Warning, TEXT("Interacted with Cannon"));
+	}
+}
+
+void AFPSCharacter::StartShoot(float Power, float Duration, FVector Direction)
+{
+	bStartedShoot = true;
+	ShootPower = Power;
+	ShootDuration = Duration;
+	ShootDirection = Direction;
+
+	FVector ShootVelocity = Direction.GetSafeNormal() * Power;
+	LaunchCharacter(ShootVelocity, true, true);
+	//GetCharacterMovement()->DisableMovement();
+
+	UE_LOG(LogTemp, Warning, TEXT("Cannon shot started"));
+}
+
+void AFPSCharacter::ShootPlayer(float DeltaTime)
+{
+	if (!bStartedShoot)
+	{
+		return;
+	}
+
+	if (ShootDuration > 0.f)
+	{
+		ShootDuration -= DeltaTime;
+	}
 }
 
 
