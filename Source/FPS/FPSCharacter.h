@@ -48,6 +48,10 @@ protected:
 	/** Mouse Look Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	class UInputAction* MouseLookAction;
+
+	/** Dash Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* DashAction;
 	
 public:
 	AFPSCharacter();
@@ -141,5 +145,16 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Wall Run")
 	float WallRunSpeed = 600.f;
+
+protected:
+	void StartDash();
+
+	UPROPERTY(EditAnywhere, Category = "Dash")
+	float DashPower = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float DashUpwardBoost = 300.f;
+
+	FVector DashDirection;
 };
 

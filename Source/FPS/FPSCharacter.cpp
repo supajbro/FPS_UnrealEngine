@@ -68,6 +68,9 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AFPSCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AFPSCharacter::LookInput);
+
+		// Dash
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AFPSCharacter::StartDash);
 	}
 	else
 	{
@@ -134,7 +137,7 @@ void AFPSCharacter::Jump()
 		Forward.Normalize();
 
 		float Dot = FVector::DotProduct(GetActorForwardVector(), PreviousDirection);
-		UE_LOG(LogTemp, Warning, TEXT("Angle Dot: %f"), Dot);
+		//UE_LOG(LogTemp, Warning, TEXT("Angle Dot: %f"), Dot);
 		if (Dot < 0.f)
 		{
 			// Reset velocity to make the jump feel more powerful
@@ -291,6 +294,24 @@ void AFPSCharacter::StopWallRun()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	//UE_LOG(LogTemp, Warning, TEXT("Wall run stopped"));
+}
+
+void AFPSCharacter::StartDash()
+{
+	if (!GetCharacterMovement()->IsFalling() || bIsWallRunning)
+	{
+		return;
+	}
+
+	FVector Forward = GetCharacterMovement()->GetForwardVector();
+	Forward.Normalize();
+
+	FVector DashVelocity = Forward * DashPower;
+	DashVelocity.Z += DashUpwardBoost;
+
+	LaunchCharacter(DashVelocity, true, true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Dash Happened!"));
 }
 
 
