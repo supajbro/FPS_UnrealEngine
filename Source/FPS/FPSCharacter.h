@@ -32,6 +32,12 @@ class AFPSCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
+	UPROPERTY()
+	TSubclassOf<UAnimInstance> UnarmedAnimClass;
+
+	UPROPERTY()
+	TSubclassOf<UAnimInstance> PistolAnimClass;
+
 protected:
 
 	/** Jump Input Action */
@@ -203,9 +209,5 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 	TArray<AWeapon*> OwnedWeapons;
 
-public:
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Weapons")
-	bool bHasWeapon = false;
 };
 

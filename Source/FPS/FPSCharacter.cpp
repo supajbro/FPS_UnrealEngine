@@ -43,6 +43,19 @@ AFPSCharacter::AFPSCharacter()
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+	static ConstructorHelpers::FClassFinder<UAnimInstance> UnarmedAnimBP(TEXT("/Game/Variant_Shooter/Anims/ABP_Unarmed"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> PistolAnimBP(TEXT("/Game/Variant_Shooter/Anims/ABP_TP_Pistol"));
+
+	if (UnarmedAnimBP.Succeeded())
+	{
+		UnarmedAnimClass = UnarmedAnimBP.Class;
+	}
+
+	if (PistolAnimBP.Succeeded())
+	{
+		PistolAnimClass = PistolAnimBP.Class;
+	}
 }
 
 void AFPSCharacter::Tick(float DeltaTime)
@@ -468,8 +481,12 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 	OwnedWeapons.Add(Weapon);
 
 	// Attach the weapon actor itself to the player
-	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepRelative, true);
-	Weapon->AttachToComponent(GetMesh(), AttachRules, "WeaponSocket");
+	//FAttachmentTransformRules AttachRules(FAttachmentTransformRules::SnapToTargetNotIncludingScale, true);
+	Weapon->AttachToComponent(
+		GetMesh(),
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		TEXT("WeaponSocket")
+	);
 
 	Weapon->SetActorEnableCollision(false);
 	if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Weapon->GetRootComponent()))
@@ -477,10 +494,14 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 		Prim->SetSimulatePhysics(false);
 	}
 
-	Weapon->SetActorRelativeLocation(FVector(10.f, 0.f, 20.f));   // tweak x/y/z
-	Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));   // rotate to line up properly
+	Weapon->SetActorRelativeLocation(FVector(-20.f, -5.f, 0.f));
+	Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
-	bHasWeapon = true;
+	if (GetMesh() && PistolAnimClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Anim switched to pistol"));
+		GetMesh()->SetAnimInstanceClass(PistolAnimClass);
+	}
 
 	SelectedWeapon = Weapon;
 }
