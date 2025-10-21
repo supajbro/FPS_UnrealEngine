@@ -16,6 +16,7 @@ class AFPSGameMode : public AGameModeBase
 
 public:
 	AFPSGameMode();
+	virtual void BeginPlay() override;
 };
 
 
