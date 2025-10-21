@@ -494,7 +494,7 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 		Prim->SetSimulatePhysics(false);
 	}
 
-	Weapon->SetActorRelativeLocation(FVector(-20.f, -5.f, 0.f));
+	Weapon->SetActorRelativeLocation(FVector(-14.f, 3.f, -0.5f));
 	Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 	if (GetMesh() && PistolAnimClass)
