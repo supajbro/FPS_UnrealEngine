@@ -373,18 +373,42 @@ void AFPSCharacter::InteractInput()
 	}
 }
 
-void AFPSCharacter::StartShoot(float Power, float Duration, FVector Direction)
+void AFPSCharacter::StartShoot(float Power, float UpwardBoost, float Duration, FVector Direction)
 {
-	bStartedShoot = true;
-	ShootPower = Power;
-	ShootDuration = Duration;
-	ShootDirection = Direction;
+	if (!GetCharacterMovement())
+		return;
 
-	FVector ShootVelocity = Direction.GetSafeNormal() * Power;
-	LaunchCharacter(ShootVelocity, true, true);
-	//GetCharacterMovement()->DisableMovement();
+	// Current location
+	FVector Start = GetActorLocation();
+	FVector End = Direction;
 
-	UE_LOG(LogTemp, Warning, TEXT("Cannon shot started"));
+	// Direction and horizontal distance
+	FVector Delta = End - Start;
+	FVector DeltaXY = FVector(Delta.X, Delta.Y, 0.f);
+	float DistanceXY = DeltaXY.Size();
+	FVector DirectionXY = DeltaXY.GetSafeNormal();
+
+	// Gravity
+	float Gravity = FMath::Abs(GetCharacterMovement()->GetGravityZ());
+
+	// Simplified arc: vertical velocity = upward boost + some from distance
+	float InitialZ = UpwardBoost + FMath::Sqrt(2 * Gravity * FMath::Max(Delta.Z, 0.f));
+
+	// Flight time estimate (simple linear approx)
+	float Time = DistanceXY / Power;
+	if (Time <= 0.f) Time = 0.1f; // avoid divide by zero
+
+	// Compute horizontal velocity
+	FVector HorizontalVelocity = DirectionXY * (DistanceXY / Time);
+
+	// Combine horizontal + vertical
+	FVector LaunchVelocity = HorizontalVelocity;
+	LaunchVelocity.Z = InitialZ;
+
+	// Launch the character
+	LaunchCharacter(LaunchVelocity, true, true);
+
+	//UE_LOG(LogTemp, Warning, TEXT("Launched to target: %s"), *TargetLocation.ToString());
 }
 
 void AFPSCharacter::ShootPlayer(float DeltaTime)

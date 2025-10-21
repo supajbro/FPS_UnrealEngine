@@ -185,6 +185,6 @@ protected:
 	FVector ShootDirection;
 
 public:
-	void StartShoot(float Power, float Duration, FVector Direction);
+	void StartShoot(float Power, float UpwardBoost, float Duration, FVector Direction);
 };
 
