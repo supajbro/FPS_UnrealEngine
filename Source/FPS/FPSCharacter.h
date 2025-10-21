@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "Weapon.h"
 #include "FPSCharacter.generated.h"
 
 class UInputComponent;
@@ -56,6 +57,10 @@ protected:
 	/** Interact Input Action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* InteractAction;
+
+	/** Shoot Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ShootAction;
 	
 public:
 	AFPSCharacter();
@@ -186,5 +191,21 @@ protected:
 
 public:
 	void StartShoot(float Power, float UpwardBoost, float Duration, FVector Direction);
+
+protected:
+	void ShootWeapon();
+	void PickupWeapon(AWeapon* Weapon);
+	void SwitchWeapon();
+
+	// Current chosen weapon
+	AWeapon* SelectedWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
+	TArray<AWeapon*> OwnedWeapons;
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Weapons")
+	bool bHasWeapon = false;
 };
 

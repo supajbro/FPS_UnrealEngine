@@ -84,6 +84,9 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		// Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AFPSCharacter::InteractInput);
+
+		// Interact
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AFPSCharacter::ShootWeapon);
 	}
 	else
 	{
@@ -338,10 +341,12 @@ void AFPSCharacter::CheckForInteraction(float DeltaTime)
 		Params
 	);
 
+	// Interact with cannon
 	auto IsValidWall = [](AActor* HitActor)
 		{
 			return HitActor && HitActor->ActorHasTag(FName("Cannon"));
 		};
+
 
 	if ((bHit && IsValidWall(Hit.GetActor())))
 	{
@@ -354,6 +359,27 @@ void AFPSCharacter::CheckForInteraction(float DeltaTime)
 		bCanInteract = false;
 		InteractableActor = nullptr;
 		DrawDebugLine(GetWorld(), Start, EndForward, FColor::Red, false, 0.f, 0, 1.0f);
+	}
+
+	// Pickup weapon
+	auto IsValidWeapon = [](AActor* HitActor)
+		{
+			return HitActor && HitActor->ActorHasTag(FName("Weapon"));
+		};
+
+	if (bHit)
+	{
+		AActor* HitActor = Hit.GetActor();
+
+		if (IsValidWeapon(HitActor))
+		{
+			if (AWeapon* Weapon = Cast<AWeapon>(HitActor))
+			{
+				PickupWeapon(Weapon);
+			}
+
+			DrawDebugLine(GetWorld(), Start, EndForward, FColor::Emerald, false, 0.f, 0, 1.0f);
+		}
 	}
 }
 
@@ -409,6 +435,58 @@ void AFPSCharacter::StartShoot(float Power, float UpwardBoost, float Duration, F
 	LaunchCharacter(LaunchVelocity, true, true);
 
 	//UE_LOG(LogTemp, Warning, TEXT("Launched to target: %s"), *TargetLocation.ToString());
+}
+
+void AFPSCharacter::ShootWeapon()
+{
+	if (SelectedWeapon == nullptr)
+	{
+		return;
+	}
+
+	int ammo = SelectedWeapon->AmmoCount;
+	float rate = SelectedWeapon->FireRate;
+
+	UE_LOG(LogTemp, Warning, TEXT("Shot weapon"));
+}
+
+void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
+{
+	if (!Weapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon is null"));
+		return;
+	}
+
+	// Don't add duplicate weapons
+	if (OwnedWeapons.Contains(Weapon))
+	{
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Picked up weapon"));
+	OwnedWeapons.Add(Weapon);
+
+	// Attach the weapon actor itself to the player
+	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepRelative, true);
+	Weapon->AttachToComponent(GetMesh(), AttachRules, "WeaponSocket");
+
+	Weapon->SetActorEnableCollision(false);
+	if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Weapon->GetRootComponent()))
+	{
+		Prim->SetSimulatePhysics(false);
+	}
+
+	Weapon->SetActorRelativeLocation(FVector(10.f, 0.f, 20.f));   // tweak x/y/z
+	Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));   // rotate to line up properly
+
+	bHasWeapon = true;
+
+	SelectedWeapon = Weapon;
+}
+
+void AFPSCharacter::SwitchWeapon()
+{
 }
 
 void AFPSCharacter::ShootPlayer(float DeltaTime)
