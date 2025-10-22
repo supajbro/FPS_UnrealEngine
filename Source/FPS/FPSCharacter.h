@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "Weapon.h"
+#include "PlayerAnimInstance.h"
 #include "FPSCharacter.generated.h"
 
 class UInputComponent;
@@ -96,6 +97,8 @@ protected:
 	virtual void DoJumpEnd();
 
 protected:
+	virtual void BeginPlay() override;
+
 	virtual void Tick(float DeltaTime) override;
 
 	/** Set up input action bindings */
@@ -110,6 +113,9 @@ public:
 
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	UPROPERTY()
+	UPlayerAnimInstance* PlayerAnimInstance;
 
 private:
 	void DebugFunc();

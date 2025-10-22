@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Cannon.h"
+#include "PlayerAnimInstance.h"
 #include "FPS.h"
 
 AFPSCharacter::AFPSCharacter()
@@ -55,6 +56,18 @@ AFPSCharacter::AFPSCharacter()
 	if (PistolAnimBP.Succeeded())
 	{
 		PistolAnimClass = PistolAnimBP.Class;
+	}
+}
+
+void AFPSCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Get the animation instance from the mesh
+	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+	if (AnimInstance)
+	{
+		PlayerAnimInstance = Cast<UPlayerAnimInstance>(AnimInstance);
 	}
 }
 
@@ -497,10 +510,16 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 	Weapon->SetActorRelativeLocation(FVector(-14.f, 3.f, -0.5f));
 	Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
-	if (GetMesh() && PistolAnimClass)
+	//if (GetMesh() && PistolAnimClass)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Anim switched to pistol"));
+	//	GetMesh()->SetAnimInstanceClass(PistolAnimClass);
+	//}
+
+	if (PlayerAnimInstance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Anim switched to pistol"));
-		GetMesh()->SetAnimInstanceClass(PistolAnimClass);
+		UE_LOG(LogTemp, Warning, TEXT("Anim switched to pistol on: %s"), *GetMesh()->GetName());
+		PlayerAnimInstance->bIsHoldingPistol = true;
 	}
 
 	SelectedWeapon = Weapon;
