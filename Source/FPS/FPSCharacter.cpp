@@ -19,7 +19,7 @@ AFPSCharacter::AFPSCharacter()
 
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(GetMesh());
+	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
@@ -63,11 +63,20 @@ void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Get the animation instance from the mesh
-	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
-	if (AnimInstance)
+	// Find the existing mesh in the Blueprint
+	if (!FirstPersonMesh)
 	{
-		PlayerAnimInstance = Cast<UPlayerAnimInstance>(AnimInstance);
+		FirstPersonMesh = FindComponentByClass<USkeletalMeshComponent>();
+	}
+
+	// Get the animation instance from the mesh
+	if (FirstPersonMesh)
+	{
+		UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+		if (AnimInstance)
+		{
+			PlayerAnimInstance = Cast<UPlayerAnimInstance>(AnimInstance);
+		}
 	}
 }
 
