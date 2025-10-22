@@ -505,7 +505,7 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 	// Attach the weapon actor itself to the player
 	//FAttachmentTransformRules AttachRules(FAttachmentTransformRules::SnapToTargetNotIncludingScale, true);
 	Weapon->AttachToComponent(
-		GetMesh(),
+		GetFirstPersonMesh(),
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		TEXT("WeaponSocket")
 	);
