@@ -502,28 +502,32 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 	UE_LOG(LogTemp, Warning, TEXT("Picked up weapon"));
 	OwnedWeapons.Add(Weapon);
 
-	// Attach the weapon actor itself to the player
-	//FAttachmentTransformRules AttachRules(FAttachmentTransformRules::SnapToTargetNotIncludingScale, true);
-	Weapon->AttachToComponent(
-		GetFirstPersonMesh(),
-		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-		TEXT("WeaponSocket")
-	);
+	// Find the socket for the weapon
+	USkeletalMeshComponent* FPSMesh = GetFirstPersonMesh();
+	FName SocketName = TEXT("WeaponSocket");
 
-	Weapon->SetActorEnableCollision(false);
-	if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Weapon->GetRootComponent()))
+	//Weapon->AttachToComponent(FPSMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+	//Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f)); // adjust as needed
+
+	if (FPSMesh && FPSMesh->DoesSocketExist(SocketName))
 	{
-		Prim->SetSimulatePhysics(false);
+		// Attach and snap to socket transform
+		Weapon->AttachToComponent(FPSMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+
+		// Ensure the weapon's root uses the socket transform exactly
+		if (USceneComponent* Root = Cast<USceneComponent>(Weapon->GetRootComponent()))
+		{
+			Root->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
+			// If your weapon model pivot is off, apply a corrective relative rotation instead of zero:
+			 //Root->SetRelativeRotation(FRotator(0.f, 90.f, 0.f)); // example
+		}
+
+		Weapon->SetActorEnableCollision(false);
+		if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Weapon->GetRootComponent()))
+		{
+			Prim->SetSimulatePhysics(false);
+		}
 	}
-
-	//Weapon->SetActorRelativeLocation(FVector(-14.f, 3.f, -0.5f));
-	//Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
-
-	//if (GetMesh() && PistolAnimClass)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Anim switched to pistol"));
-	//	GetMesh()->SetAnimInstanceClass(PistolAnimClass);
-	//}
 
 	if (PlayerAnimInstance)
 	{
