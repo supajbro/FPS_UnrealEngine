@@ -210,6 +210,7 @@ protected:
 	void SwitchWeapon();
 
 	// Current chosen weapon
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapons")
 	AWeapon* SelectedWeapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")

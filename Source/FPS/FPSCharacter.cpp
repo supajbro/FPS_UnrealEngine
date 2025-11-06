@@ -120,8 +120,8 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		// Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AFPSCharacter::InteractInput);
 
-		// Interact
-		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AFPSCharacter::ShootWeapon);
+		// Shoot
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AFPSCharacter::ShootWeapon);
 	}
 	else
 	{
@@ -475,13 +475,18 @@ void AFPSCharacter::StartShoot(float Power, float UpwardBoost, float Duration, F
 
 void AFPSCharacter::ShootWeapon()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Shot weapon"));
 	if (SelectedWeapon == nullptr)
 	{
 		return;
 	}
 
-	int ammo = SelectedWeapon->AmmoCount;
-	float rate = SelectedWeapon->FireRate;
+	AWeapon* weapon = SelectedWeapon;
+
+	int ammo = weapon->AmmoCount;
+	float rate = weapon->FireRate;
+
+	weapon->Shoot();
 
 	UE_LOG(LogTemp, Warning, TEXT("Shot weapon"));
 }

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Bullet.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
@@ -29,10 +30,21 @@ public:
 
 	USkeletalMeshComponent* GetSkeletalMesh();
 
-	UPROPERTY(EditAnywhere, Category = "Values")
+	void Shoot();
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	TSubclassOf<class ABullet> BulletClass;
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UStaticMeshComponent* SpawnLocation;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	FRotator SpawnRotation;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 	int AmmoCount;
 
-	UPROPERTY(EditAnywhere, Category = "Values")
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float FireRate;
 
 	UPROPERTY(VisibleAnywhere)
