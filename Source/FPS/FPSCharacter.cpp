@@ -434,6 +434,7 @@ void AFPSCharacter::InteractInput()
 	}
 }
 
+// Controls the shoot power of the cannon
 void AFPSCharacter::StartShoot(float Power, float UpwardBoost, float Duration, FVector Direction)
 {
 	if (!GetCharacterMovement())
@@ -506,20 +507,16 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 	USkeletalMeshComponent* FPSMesh = GetFirstPersonMesh();
 	FName SocketName = TEXT("WeaponSocket");
 
-	//Weapon->AttachToComponent(FPSMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
-	//Weapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f)); // adjust as needed
-
+	// Attach the weapon mesh to the player and position and rotate to the socket
 	if (FPSMesh && FPSMesh->DoesSocketExist(SocketName))
 	{
 		// Attach and snap to socket transform
 		Weapon->AttachToComponent(FPSMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
 
-		// Ensure the weapon's root uses the socket transform exactly
+		// Zer out location and rotation to be at exact socket pos
 		if (USceneComponent* Root = Cast<USceneComponent>(Weapon->GetRootComponent()))
 		{
 			Root->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
-			// If your weapon model pivot is off, apply a corrective relative rotation instead of zero:
-			 //Root->SetRelativeRotation(FRotator(0.f, 90.f, 0.f)); // example
 		}
 
 		Weapon->SetActorEnableCollision(false);
@@ -529,6 +526,7 @@ void AFPSCharacter::PickupWeapon(AWeapon* Weapon)
 		}
 	}
 
+	// Play the hand animations when holding the weapon
 	if (PlayerAnimInstance)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Anim switched to pistol on: %s"), *GetMesh()->GetName());
